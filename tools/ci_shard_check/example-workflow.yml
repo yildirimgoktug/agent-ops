@@ -1,0 +1,101 @@
+# Example GitHub Actions workflow: check the shard plan, then run the shards.
+# Copy to .github/workflows/test.yml in your project and adjust the
+# placeholders: BACKEND_DIR, the Python version, services and env.
+#
+# Shape (adapted from the original project):
+#   plan job   -> runs ci_shard_check.py; fails before any shard starts
+#   shard jobs -> matrix taken from the checker's --matrix output
+#   aggregate  -> one stable required check, green only if plan + all shards passed
+name: test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    # Run on agent branches too, so a branch is verified BEFORE it merges.
+    branches: [main, "feat/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  BACKEND_DIR: backend   # directory that holds manage.py and ci_shards.json
+
+jobs:
+  plan:
+    name: Shard plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the plan covers every test unit exactly once
+        id: plan
+        run: |
+          python tools/ci_shard_check/ci_shard_check.py --root "$BACKEND_DIR"
+          echo "matrix=$(python tools/ci_shard_check/ci_shard_check.py --root "$BACKEND_DIR" --matrix)" >> "$GITHUB_OUTPUT"
+
+  shard:
+    name: Shard (${{ matrix.shard.name }})
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 40          # hard backstop
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    # services: add your database / cache here
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: pip install -r requirements.txt
+      - name: Run shard with a soft time budget
+        working-directory: ${{ env.BACKEND_DIR }}
+        # The soft budget fails early with a message that names the file to
+        # edit, instead of dying silently at the hard timeout.
+        run: |
+          start=$SECONDS
+          set +e
+          timeout --signal=TERM --kill-after=60s 24m \
+            python manage.py test ${{ matrix.shard.labels }} --noinput --parallel
+          rc=$?
+          set -e
+          elapsed=$(( SECONDS - start ))
+          echo "shard ${{ matrix.shard.name }} wall time: $(( elapsed / 60 ))m $(( elapsed % 60 ))s"
+          if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+            echo "::error::shard ${{ matrix.shard.name }} is outgrowing its slot - split it in ci_shards.json"
+            exit 1
+          fi
+          exit "$rc"
+
+  aggregate:
+    # Make THIS job the required status check. Its name stays stable when
+    # shards are added, removed or renamed.
+    name: Backend tests
+    needs: [plan, shard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "::error::shard plan failed - no shard ran"; exit 1
+          fi
+          if [ "${{ needs.shard.result }}" != "success" ]; then
+            echo "::error::at least one shard failed"; exit 1
+          fi
+          echo "plan held and every shard passed"

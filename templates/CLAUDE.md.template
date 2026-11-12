@@ -1,0 +1,111 @@
+<!--
+  Agent instructions template. Copy to CLAUDE.md (or AGENTS.md) at the
+  repository root and replace every {{PLACEHOLDER}}.
+
+  The original project's own CLAUDE.md was never committed to its
+  repository; this template is rebuilt from the rules its committed docs,
+  code comments and commit messages quote and cite. Tags:
+    (P) practised and recorded on the original project
+    (S) suggested, not from the original project
+  Delete the tags once you have adopted a rule.
+-->
+
+# {{PROJECT_NAME}} - agent instructions
+
+## 1. Workflow
+
+- Never work on `{{MAIN_BRANCH}}`. Each task gets a branch from
+  `{{MAIN_BRANCH}}`, named `{{BRANCH_PREFIX}}/<task-id>-<slug>`. (P)
+- Push your branch to `origin`. The push is not optional: the reviewer
+  verifies from `origin`, not from your report. (P)
+- You do not open pull requests and you do not merge. {{OWNER}} merges,
+  after {{VERIFIER}} has verified the branch from `origin`. (P)
+- Never force-push, never rebase published history, never `git add -A`.
+  Stage by explicit path. (P)
+- Never stage: {{NEVER_STAGE_PATHS}}. (P)
+- Start every task with a sync and a guard: fetch, confirm you are on the
+  right base (`git merge-base` / a grep for something the base must
+  contain), and record the current baselines (lint count, test count). (P)
+- {{OWNER}} is not the first QA tester. A feature is done when a user can
+  reach it from the UI, not when its endpoint answers. (P)
+
+## 2. Project context
+
+{{ONE_PARAGRAPH: what the system is, who uses it, primary language}}
+
+Authoritative documents, in order of precedence:
+1. `{{SOURCE_OF_TRUTH_DOC}}` - what the system must be.
+2. `{{INVARIANTS_DOC}}` - the security floor (section 5).
+3. Where docs and code disagree, the code is the truth. Report the
+   drift; do not silently follow either side. (P)
+
+## 3. Conventions
+
+- {{BACKEND_CONVENTIONS}}
+- {{FRONTEND_CONVENTIONS}}
+- Lint baseline is **{{LINT_BASELINE}}**. Add no new violations. When the
+  count changes, update it here and in `{{CHECKLIST_DOC}}` in the same
+  commit. (P)
+- A list rendered from a server collection is always bounded. (P)
+- One fact, one place. A second copy of a fact (a duplicated array, a
+  hand-kept list beside a derived one) will drift. Derive it instead. (P)
+- When a file grows past {{FILE_SIZE_LIMIT}}, add a new, app-scoped file
+  rather than growing it further. (P)
+- Destructive schema changes (drop, rename, type change) need explicit
+  sign-off from {{OWNER}} in the task brief. Migrations are additive and
+  backward compatible by default. (P)
+
+## 4. Parallel work
+
+- Several agents may run at once, each in its own git worktree. (P)
+- Each brief lists the files the agent owns. Do not edit a file outside
+  that list; if you must, stop and report why. (P)
+- Agents in the same wave own disjoint files, so `git pull --rebase`
+  before pushing is clean. If a push is rejected, pull-rebase and retry. (P)
+- Waves are sequential when a later task builds on an earlier one's files. (P)
+
+## 5. Hard invariants
+
+These are listed in `{{INVARIANTS_DOC}}`. Each has an ID, the place it is
+enforced and the test that locks it. Any change that contradicts one is a
+P0 regression. (P)
+
+- Never weaken, skip or delete an invariant's test to make a change pass.
+- A new invariant is added together with its test, in the same commit.
+- Paired rules: when a rule has two halves, both ship together. Example
+  from the original project: "new tracked field on an audited model ->
+  add it to the tracked-fields list AND add a test in the audit suite". (P)
+
+## 6. Definition of done
+
+A task is done when all of these hold, and the report shows each one:
+
+- [ ] Every acceptance item in the brief is met, or listed as NOT done
+      with a reason. (P)
+- [ ] Tests added or changed for the behaviour; invariant tests untouched
+      or strengthened. (P)
+- [ ] `{{FAST_CHECKS}}` clean (type check, lint at or below baseline,
+      migrations check). (P)
+- [ ] The full test suite has run at the close of the task:
+      `{{FULL_SUITE_COMMAND}}`. A red is a task item, not a note. (P)
+- [ ] Any document that quotes UI text was checked against the running
+      screen, not the source bundle. (P)
+- [ ] CI result read for the pushed commit. (P)
+- [ ] `{{CHECKLIST_DOC}}` updated (NOW / NEXT / SHIPPED) in the same
+      branch, not in a later docs-only pass. (P)
+- [ ] Adversarial self-review done: what would a reviewer try to break? (P)
+
+## 7. Fix loops
+
+- At most two fix iterations per failing item. If it still fails, report
+  it as open with the evidence. Do not keep retrying. (P)
+- No unattended agent-versus-agent loops. (P)
+
+## 8. Reporting
+
+End every task with a report that contains:
+- branch name and tip commit;
+- per acceptance item: done / not done, with evidence (test name, command
+  output, screenshot);
+- numbers measured, not assumed (test counts, timings, lint count);
+- "Deliberately NOT done" and "Where the brief was wrong", if any. (P)

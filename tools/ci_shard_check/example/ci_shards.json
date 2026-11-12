@@ -1,0 +1,14 @@
+{
+  "_comment": "Example plan. 'mysite' is the project package: it has no apps.py and still owns tests, so it must be in a shard. 'orders' is split by rule, not by a list of files.",
+  "shards": [
+    {"name": "small-units", "apps": "mysite catalog shipping"},
+    {"name": "orders-1", "apps": "orders", "split": {"parts": 2, "index": 0}},
+    {"name": "orders-2", "apps": "orders", "split": {"parts": 2, "index": 1}}
+  ],
+  "exempt": [
+    {
+      "unit": "test_helpers",
+      "reason": "shared fixtures at the root; defines no TestCase and collects 0 tests"
+    }
+  ]
+}

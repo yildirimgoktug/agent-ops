@@ -1,0 +1,25 @@
+# Runs this repository's own checks: the shard checker's tests and the
+# example plan. The workflow for YOUR project is
+# tools/ci_shard_check/example-workflow.yml.
+name: selftest
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shard-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: python -m pytest -q
+      - run: python tools/ci_shard_check/ci_shard_check.py --root tools/ci_shard_check/example
+      - run: bash -n scripts/agents-up.sh && bash -n scripts/agents-down.sh
