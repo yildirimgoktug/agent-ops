@@ -6,7 +6,7 @@ briefs, one git worktree per agent, hard rules bound to tests,
 independent verification of every branch, and a CI check that proves
 every test actually runs.
 
-It is extracted from a private project (a Django/React platform, about
+It is extracted from [a private client project](https://github.com/yildirimgoktug/cleanops-case-study) (a Django/React platform, about
 640 commits over six months) that one developer built by running several
 Claude Code sessions at once. The product stays private. This repository
 holds the way of working: templates, two small scripts, one CI tool, and
