@@ -18,11 +18,12 @@ set -euo pipefail
 DIR="../agent-worktrees"
 YES=0
 FORCE=0
+FAILED=0
 NAMES=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --dir) DIR="${2:-}"; shift 2 ;;
+    --dir) [ $# -ge 2 ] || { echo "error: --dir needs a value" >&2; exit 2; }; DIR="$2"; shift 2 ;;
     --yes) YES=1; shift ;;
     --force) FORCE=1; YES=1; shift ;;
     -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -42,19 +43,23 @@ for name in "${NAMES[@]}"; do
   fi
   dirty=$(git -C "$path" status --porcelain | wc -l | tr -d ' ')
   unpushed=$(git -C "$path" rev-list HEAD --not --remotes | wc -l | tr -d ' ')
-  state="clean, pushed"
+  state="clean"
   [ "$dirty" -eq 0 ] || state="$dirty uncommitted change(s)"
-  [ "$unpushed" -eq 0 ] || state="$state; $unpushed commit(s) on no remote"
+  if [ "$unpushed" -gt 0 ]; then
+    state="$state; $unpushed commit(s) on no remote"
+  elif [ "$dirty" -eq 0 ]; then
+    state="$state, fully pushed"
+  fi
 
   if [ "$dirty" -eq 0 ] && [ "$unpushed" -eq 0 ]; then
     if [ "$YES" -eq 1 ]; then
-      git worktree remove "$path" && echo "$name: removed ($state)"
+      if git worktree remove "$path"; then echo "$name: removed ($state)"; else echo "$name: FAILED" >&2; FAILED=1; fi
     else
       echo "$name: $state - would remove (pass --yes)"
     fi
   else
     if [ "$FORCE" -eq 1 ]; then
-      git worktree remove --force "$path" && echo "$name: FORCE-removed ($state)"
+      if git worktree remove --force "$path"; then echo "$name: FORCE-removed ($state)"; else echo "$name: FAILED" >&2; FAILED=1; fi
     else
       echo "$name: KEPT - $state. Push or archive it first, or pass --force to discard."
     fi
@@ -62,4 +67,5 @@ for name in "${NAMES[@]}"; do
 done
 
 [ "$YES" -eq 1 ] && git worktree prune
+[ "$FAILED" -eq 0 ] || exit 1
 exit 0

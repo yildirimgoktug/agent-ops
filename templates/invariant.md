@@ -14,7 +14,7 @@ that contradicted one was treated as a P0 regression.
 
 | ID | Invariant | Enforced at | Test that locks it |
 |---|---|---|---|
-| INV-{{n}} | **{{One sentence, stated as what must never happen or must always happen.}}** | `{{path/to/module.py}}` `{{function}}` | `{{path/to/test_file.py}}::{{TestClass}}::{{test_name}}` |
+| INV-{{N}} | **{{One sentence, stated as what must never happen or must always happen.}}** | `{{path/to/module.py}}` `{{FUNCTION}}` | `{{path/to/test_file.py}}::{{TEST_CLASS}}::{{TEST_NAME}}` |
 
 Rules for the table:
 - One sentence per invariant. If it needs "and", it is two invariants.

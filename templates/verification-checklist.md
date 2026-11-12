@@ -6,20 +6,20 @@ separate assistant session that read each pushed branch from `origin`,
 followed by the owner's go-ahead. The rule there: nothing merges before
 it has been verified from `origin`, with no exception.
 
-**Branch:** `{{branch}}`  **Tip:** `{{sha}}`  **Brief:** {{TASK_ID}}
-**Verifier:** {{who}}  **Date:** {{date}}
+**Branch:** `{{BRANCH}}`  **Tip:** `{{SHA}}`  **Brief:** {{TASK_ID}}
+**Verifier:** {{VERIFIER}}  **Date:** {{DATE}}
 
 ## 1. Read from origin, not from the report
 
-- [ ] `git fetch origin && git checkout --detach origin/{{branch}}` in a
+- [ ] `git fetch origin && git checkout --detach origin/{{BRANCH}}` in a
       clean worktree. The report is a claim; the branch is the evidence.
 - [ ] The tip SHA matches the report.
 - [ ] The branch starts from the base the brief named
-      (`git merge-base origin/{{branch}} origin/{{main}}`).
+      (`git merge-base origin/{{BRANCH}} origin/{{MAIN_BRANCH}}`).
 
 ## 2. Scope
 
-- [ ] `git diff --stat origin/{{main}}...origin/{{branch}}` touches only
+- [ ] `git diff --stat origin/{{MAIN_BRANCH}}...origin/{{BRANCH}}` touches only
       files the brief put in scope. Every extra file is explained.
 - [ ] Migrations: none, or exactly the ones the brief allowed, additive.
 - [ ] No secrets, local paths, generated artefacts or private files staged.

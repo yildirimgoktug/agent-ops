@@ -20,8 +20,8 @@ On the original project (all figures from its docs and commit messages):
 ## Why "first"
 
 The plan job runs the checker and produces the matrix. Shards depend on
-it. If the plan is wrong, nothing runs and the aggregate check fails with
-a message that names the missing unit. Checking after the shards (or
+it. If the plan is wrong, nothing runs and the aggregate check goes red
+(it only says the plan failed; the plan job's log names the missing unit). Checking after the shards (or
 never) means a green run that silently skipped tests.
 
 ## The checker had a blind spot too

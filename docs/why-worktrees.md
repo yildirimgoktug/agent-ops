@@ -23,7 +23,9 @@ it is cheap to create and every commit is visible to the others at once.
   it could be verified from there, deleted after merge. At rest the remote
   held only `main` and tags.
 
-`scripts/agents-up.sh` / `.ps1` reproduce the first pattern.
+`scripts/agents-up.sh` / `.ps1` reproduce the first pattern's worktrees
+(detached, cut from one base), but their hint has each agent push its own
+branch (`feat/<name>`) rather than the shared one.
 
 ## What went wrong, and what to do instead
 

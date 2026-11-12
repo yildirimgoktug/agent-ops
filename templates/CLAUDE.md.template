@@ -8,6 +8,34 @@
     (P) practised and recorded on the original project
     (S) suggested, not from the original project
   Delete the tags once you have adopted a rule.
+
+  Placeholders used across all files in templates/ (UPPER_CASE names are
+  short values to fill in; a {{...}} holding a sentence or a path pattern
+  says what to write there):
+    {{PROJECT_NAME}}            name of the project
+    {{MAIN_BRANCH}}             the protected main branch, e.g. main
+    {{BRANCH_PREFIX}}           prefix for task branches, e.g. feat
+    {{OWNER}}                   the person who merges and decides
+    {{VERIFIER}}                who verifies a branch (a session, a model or a person)
+    {{NEVER_STAGE_PATHS}}       paths agents must never stage
+    {{SOURCE_OF_TRUTH_DOC}}     the document saying what the system must be
+    {{INVARIANTS_DOC}}          the invariants table (see invariant.md)
+    {{CHECKLIST_DOC}}           the living NOW / NEXT / SHIPPED checklist
+    {{BACKEND_CONVENTIONS}}, {{FRONTEND_CONVENTIONS}}   one-line conventions
+    {{LINT_BASELINE}}           current lint violation count
+    {{FILE_SIZE_LIMIT}}         size at which a file stops growing
+    {{FAST_CHECKS}}             type check, lint, migrations check
+    {{FULL_SUITE_COMMAND}}      command that runs the whole test suite
+    {{PLAN_CHECK_COMMAND}}      command that runs the shard plan check
+    {{TEST_COMMAND for touched apps}}   command that tests the touched apps
+    {{TASK_ID}}, {{SHORT_TITLE}}, {{SLUG}}   task identity; branch is PREFIX/TASK_ID-SLUG
+    {{BASE_REF}}, {{EXPECTED_SHA}}   base the branch starts from, and its expected SHA
+    {{SOMETHING_THE_BASE_MUST_CONTAIN}}, {{FILE}}   a string the base must contain, and the file it is in
+    {{WORKTREE_PATH}}           where the agent's worktree lives
+    {{WAVE}}, {{OTHER_TASK_IDS}}, {{OTHER_TASK_ID}}   wave number; tasks running alongside; the task owning a file
+    {{INV-ID}}                  an invariant ID, e.g. INV-3
+    {{N}}, {{FUNCTION}}, {{TEST_CLASS}}, {{TEST_NAME}}   invariant row: number, enforcing function, locking test
+    {{BRANCH}}, {{SHA}}, {{DATE}}   verification checklist: branch under review, its tip, review date
 -->
 
 # {{PROJECT_NAME}} - agent instructions

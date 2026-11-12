@@ -3,8 +3,8 @@
 #
 # Mechanics adapted from the original project's parallel-wave notes: each
 # parallel agent works in its own DETACHED worktree cut from one shared
-# branch, owns a disjoint set of files, and pushes back with
-# pull --rebase, never --force. The script itself is suggested.
+# branch, owns a disjoint set of files, and syncs with pull --rebase,
+# never --force. The script itself is suggested.
 #
 # Usage:
 #   scripts/agents-up.sh --base origin/feat/wave-1 --dir ../wt alpha beta gamma
@@ -25,8 +25,8 @@ usage() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --base) BASE="${2:-}"; shift 2 ;;
-    --dir) DIR="${2:-}"; shift 2 ;;
+    --base) [ $# -ge 2 ] || { echo "error: --base needs a value" >&2; exit 2; }; BASE="$2"; shift 2 ;;
+    --dir) [ $# -ge 2 ] || { echo "error: --dir needs a value" >&2; exit 2; }; DIR="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage 0 ;;
     -*) echo "unknown option: $1" >&2; usage 2 ;;
@@ -39,7 +39,8 @@ done
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "error: run inside a git repository" >&2; exit 2; }
 git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null || { echo "error: base '$BASE' does not resolve; fetch first?" >&2; exit 2; }
 
-# The shared branch the agents push to, if the base is a remote branch.
+# The shared branch the agents sync from, if the base is a remote branch.
+# They never push to it: each agent pushes its own branch (feat/<name>).
 PUSH_BRANCH="${BASE#origin/}"
 
 for name in "${NAMES[@]}"; do
@@ -65,6 +66,6 @@ Next, per agent:
        git add <explicit paths>      # never 'git add -A'
        git commit
        git pull --rebase origin $PUSH_BRANCH
-       git push origin HEAD:$PUSH_BRANCH   # if rejected: pull --rebase again; never --force
+       git push origin HEAD:refs/heads/feat/<name>   # its own branch, never $PUSH_BRANCH; never --force
   4. Remove finished worktrees with scripts/agents-down.sh.
 EOF

@@ -143,6 +143,8 @@ def load_plan(path: Path) -> tuple[list[dict], dict[str, str]]:
         raise PlanError(f"plan file not found: {path}") from exc
     except json.JSONDecodeError as exc:
         raise PlanError(f"plan file is not valid JSON: {exc}") from exc
+    if not isinstance(plan, dict):
+        raise PlanError("plan must be a JSON object with a \"shards\" list")
     shards = plan.get("shards")
     if not isinstance(shards, list) or not shards:
         raise PlanError('plan needs a non-empty "shards" list')
@@ -153,17 +155,30 @@ def load_plan(path: Path) -> tuple[list[dict], dict[str, str]]:
         if shard["name"] in names:
             raise PlanError(f'shard name {shard["name"]!r} is used twice')
         names.add(shard["name"])
+        apps = shard["apps"]
+        if not (isinstance(apps, str) or
+                (isinstance(apps, list) and all(isinstance(a, str) for a in apps))):
+            raise PlanError(
+                f'shard {shard["name"]!r}: "apps" must be a string or a list of strings'
+            )
         if not _apps(shard):
             raise PlanError(f'shard {shard["name"]!r} names no apps')
         split = shard.get("split")
         if split is not None:
+            if not isinstance(split, dict):
+                raise PlanError(f'shard {shard["name"]!r}: "split" must be an object')
             parts, index = split.get("parts"), split.get("index")
             if not (isinstance(parts, int) and isinstance(index, int) and parts >= 2):
                 raise PlanError(
                     f'shard {shard["name"]!r}: "split" needs integer "parts" >= 2 and "index"'
                 )
     exempt: dict[str, str] = {}
-    for entry in plan.get("exempt", []):
+    entries = plan.get("exempt", [])
+    if not isinstance(entries, list):
+        raise PlanError('"exempt" must be a list of {"unit", "reason"} objects')
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise PlanError('every "exempt" entry must be an object with "unit" and "reason"')
         if not entry.get("unit") or not str(entry.get("reason", "")).strip():
             raise PlanError('every "exempt" entry needs a "unit" and a written "reason"')
         exempt[entry["unit"]] = entry["reason"]
@@ -279,6 +294,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
+    if not root.is_dir():
+        print(f"error: --root {args.root} is not a directory", file=sys.stderr)
+        return 2
     plan_path = Path(args.plan) if args.plan else root / "ci_shards.json"
     skip = DEFAULT_SKIP_DIRS | set(args.skip_dir)
 

@@ -6,7 +6,7 @@
   gates, "deliberately not done"). Keep it to one screen if you can.
 -->
 
-**Branch:** `{{BRANCH_PREFIX}}/{{TASK_ID}}-{{slug}}` from `{{BASE_REF}}`
+**Branch:** `{{BRANCH_PREFIX}}/{{TASK_ID}}-{{SLUG}}` from `{{BASE_REF}}`
 **Worktree:** `{{WORKTREE_PATH}}`
 **Wave:** {{WAVE}} (runs in parallel with: {{OTHER_TASK_IDS or "none"}})
 **Source:** {{why this task exists: doc + section, finding ID, owner's words}}

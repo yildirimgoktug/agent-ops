@@ -62,6 +62,10 @@ group (`"apps": "a b c"`).
 
 ## Usage
 
+The checker needs a plan file. By default it reads `<root>/ci_shards.json`;
+pass `--plan` to use another path. `example/ci_shards.json` is a working
+plan to copy and adapt.
+
 ```bash
 python tools/ci_shard_check/ci_shard_check.py --root backend
 python tools/ci_shard_check/ci_shard_check.py --root backend --plan ci/shards.json

@@ -230,11 +230,29 @@ def test_new_test_file_joins_a_bucket_without_editing_the_plan(tmp_path, capsys)
     json.dumps({"shards": [{"name": "x", "apps": "a"}, {"name": "x", "apps": "b"}]}),
     json.dumps({"shards": [{"name": "x", "apps": "a", "split": {"parts": 1, "index": 0}}]}),
     json.dumps({"shards": [{"name": "x", "apps": "a"}], "exempt": [{"unit": "b"}]}),
+    json.dumps([{"name": "x", "apps": "a"}]),  # top level is a list
+    json.dumps({"shards": [{"name": "x", "apps": 5}]}),  # apps is a number
+    json.dumps({"shards": [{"name": "x", "apps": "a"}], "exempt": ["b"]}),  # strings, not objects
+    json.dumps({"shards": [{"name": "x", "apps": "a", "split": 2}]}),  # split is a number
 ])
 def test_malformed_plan_exits_2(tmp_path, plan):
     make_tree(tmp_path, ["a/test_a.py"])
     (tmp_path / "ci_shards.json").write_text(plan, encoding="utf-8")
     assert run(tmp_path) == 2
+
+
+def test_malformed_plan_is_one_line_message_not_traceback(tmp_path, capsys):
+    make_tree(tmp_path, ["a/test_a.py"])
+    (tmp_path / "ci_shards.json").write_text('["x"]', encoding="utf-8")
+    assert run(tmp_path) == 2
+    err = capsys.readouterr().err.strip().splitlines()
+    assert len(err) == 1 and err[0].startswith("malformed shard plan")
+
+
+def test_nonexistent_root_exits_2_with_one_line(tmp_path, capsys):
+    assert run(tmp_path / "no-such-dir") == 2
+    err = capsys.readouterr().err.strip().splitlines()
+    assert len(err) == 1 and "not a directory" in err[0]
 
 
 def test_missing_plan_exits_2(tmp_path):

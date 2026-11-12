@@ -3,6 +3,8 @@
   Create one detached git worktree per agent, all from the same base.
 .DESCRIPTION
   PowerShell twin of agents-up.sh. Never deletes, resets or pushes anything.
+  Run it from a PowerShell prompt. Pass several names as a comma-separated
+  list (-Names alpha,beta); a single "alpha,beta" string is split on commas.
 .EXAMPLE
   ./scripts/agents-up.ps1 -Base origin/feat/wave-1 -Dir ..\wt -Names alpha,beta,gamma
 .EXAMPLE
@@ -15,6 +17,7 @@ param(
   [switch]$DryRun
 )
 $ErrorActionPreference = "Stop"
+$Names = @($Names | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
 
 git rev-parse --is-inside-work-tree 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "run inside a git repository" }
@@ -44,6 +47,6 @@ Next, per agent:
        git add <explicit paths>      # never 'git add -A'
        git commit
        git pull --rebase origin $pushBranch
-       git push origin HEAD:$pushBranch   # if rejected: pull --rebase again; never --force
+       git push origin HEAD:refs/heads/feat/<name>   # its own branch, never $pushBranch; never --force
   4. Remove finished worktrees with scripts/agents-down.ps1.
 "@

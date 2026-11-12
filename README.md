@@ -64,15 +64,16 @@ The rules that hold the loop together:
 These numbers come from the project's own docs and commit messages. They
 describe one project and are not a benchmark.
 
-- **Test suite:** 6077 backend tests; a full serial run took 21268 s
+- **Test suite:** 6077 backend tests at the serial run, which took 21268 s
   (about 5.9 hours).
 - **CI before sharding:** one backend job, killed at 50m22s by its
   50-minute timeout. The required check could never pass.
 - **CI after sharding:** first 7 shards, later 13 when the hosted runner
   dropped from 4 to 2 vCPU. On the recorded run all 13 were green and the
   slowest shard took 15m29s, against a 24-minute soft budget. Parity
-  checked: 6078 tests in 424 modules, sharded and local, none missed,
-  none run twice.
+  checked later on the 13-shard run, when the suite stood at 6078 tests in
+  424 modules (6077 at the serial run above), sharded and local, none
+  missed, none run twice.
 - **What the plan check caught:** the project package, which has no
   `apps.py`, owned 12 security tests and was in no shard. CI had been
   running 6065 tests in 422 modules instead of 6077 in 424.
@@ -94,16 +95,23 @@ describe one project and are not a benchmark.
 2. Write 3 to 5 invariants with `templates/invariant.md`. For each, break
    the rule locally once and watch its test fail.
 3. If your suite is sharded, copy `tools/ci_shard_check/` and adapt
-   `example-workflow.yml`. Run
+   `example-workflow.yml`. The checker needs a plan file: by default
+   `<dir>/ci_shards.json` (or pass `--plan`). Start from
+   `tools/ci_shard_check/example/ci_shards.json`. Run
    `python tools/ci_shard_check/ci_shard_check.py --root <dir>` locally first.
 4. Plan a wave of 2 or 3 tasks that touch disjoint files. Write one
    `task-brief.md` per task.
-5. Push a shared base branch, then create worktrees:
+5. Copy `scripts/` into your repository. Push a shared base branch, then
+   create worktrees from inside your repository:
    `scripts/agents-up.sh --base origin/<branch> --dir ../wt task-a task-b`.
-   Start one agent session per worktree with its brief.
+   Start one agent session per worktree with its brief. Each agent pushes
+   its own branch (`git push origin HEAD:refs/heads/feat/<name>`), never the base.
+   The `.ps1` twins are for a PowerShell prompt; pass several names as
+   `-Names task-a,task-b`.
 6. When an agent reports done, verify its branch from `origin` with
    `templates/verification-checklist.md`, in a separate session or by hand.
-7. Merge what passes. Remove worktrees with `scripts/agents-down.sh --yes`.
+7. Merge what passes. Remove the worktrees from step 5 with
+   `scripts/agents-down.sh --dir ../wt --yes task-a task-b`.
 
 ## Limits and caveats
 
