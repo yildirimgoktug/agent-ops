@@ -146,6 +146,6 @@ What this does not solve:
 
 Göktuğ Yıldırım, final-year BSc Artificial Intelligence student at
 Vrije Universiteit Amsterdam.
-GitHub: [goktugg21](https://github.com/goktugg21) · goktugyildirim65@gmail.com
+GitHub: [yildirimgoktug](https://github.com/yildirimgoktug) · goktugyildirim65@gmail.com
 
 MIT licensed. See `LICENSE`.
